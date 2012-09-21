@@ -2,22 +2,25 @@
 
 #include "ofMain.h"
 #include "ofxOsc.h"
-
-#include "ofxDurationTrack.h
+#include "ofxDurationEvents.h"
+#include "ofxDurationTrack.h"
 
 class ofxDuration : public ofxOscReceiver {
   public:
+	
 	ofxDuration();
-	virtual void setup(int port);
-	virtual void draw();
+	void setup(int port);
+	//just debug
+	void draw(float x, float y, float width, float height);
 
-    virtual float getValueForTrack(string trackName);
-    virtual bool getBoolForTrack(string trackName);
+    float getValueForTrack(string trackName);
+    bool getBoolForTrack(string trackName);
     int getNumTracks();
     
 	vector<string>& getTracks();
 		
-	void drawDebug();
+	ofxDurationEvents events;
+	
 	void setupFont(string fontPath, int fontSize);
 	
   protected:
@@ -25,6 +28,14 @@ class ofxDuration : public ofxOscReceiver {
     ofTrueTypeFont font;
     void update(ofEventArgs& args);
 	
+	void parseInfoMessage(const ofxOscMessage& m);
+	void parseTrackMessage(const ofxOscMessage& m);
+	
 	vector<string> trackNames;
     map<string, ofxDurationTrack> tracks;
+
+	//debug colors
+	ofColor redColor;
+	ofColor blueColor;
+
 };

@@ -6,10 +6,12 @@
 
 class ofxDurationTrack {
   public:
-    string name;
     string type;
-    bool on;
-    float value;
-	ofColor color;
-	ofRange range;	
+    string name;
+	float lastUpdatedTime;
+	string flag; //for flags
+    bool on; //for switches
+    float value; //for Curves
+	ofRange range; //for Curves
+	ofColor color; //for Colors
 };
