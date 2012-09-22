@@ -64,9 +64,9 @@ void ofxDuration::parseInfoMessage(const ofxOscMessage& m){
 				}
 			}
 			
-
-			trackNames.push_back(t.name);
+			//only add unique names
 			if(tracks.find(t.name) == tracks.end()){
+				trackNames.push_back(t.name);
 				tracks[t.name] = t;
 			}
 			else{
@@ -145,18 +145,19 @@ void ofxDuration::parseTrackMessage(const ofxOscMessage& m){
 //just for debug purposes
 void ofxDuration::draw(float x, float y, float width, float height){
 
+
 	ofPushStyle();
 	ofEnableAlphaBlending();
 	
     map<string, ofxDurationTrack>::iterator trackit;
 	int numTracks = tracks.size();
-	float widthPerTrack = width / numTracks;
+	float heightPerTrack = height / numTracks;
 	int trackIdx = 0;
 	for(trackit = tracks.begin(); trackit != tracks.end(); trackit++){
 		ofPushStyle();
 		
 		ofxDurationTrack& track = trackit->second;
-		ofRectangle drawSpace(x+(trackIdx*widthPerTrack), y, widthPerTrack, height);
+		ofRectangle drawSpace(x, y+(heightPerTrack*trackIdx), width, heightPerTrack);
 		//fade out indicator over 2 seconds
 		float fadeValue = ofMap(track.lastUpdatedTime, ofGetElapsedTimef(), ofGetElapsedTimef()-2, 150, 0, true);
 
@@ -169,7 +170,7 @@ void ofxDuration::draw(float x, float y, float width, float height){
 			ofSetColor(redColor);
 			float height = ofMap(track.value, track.range.min, track.range.max, drawSpace.getMaxY(), drawSpace.getMinY());
 			ofLine(drawSpace.getMinX(), height,
-				   drawSpace.getMaxX(), height);
+				   drawSpace.getMaxX(), height);			
 		}
 		else if(track.type == "Colors"){
 			ofFill();
@@ -187,13 +188,34 @@ void ofxDuration::draw(float x, float y, float width, float height){
 		else if(track.type == "Flags"){
 			ofFill();
 			ofSetColor(blueColor, fadeValue);
-			ofRect(drawSpace);			
+			ofRect(drawSpace);
+			ofSetColor(255);
+			if(font.isLoaded()){
+				font.drawString(track.flag, drawSpace.x + 10, drawSpace.y + (font.getLineHeight()+3)*2);
+			}
+			else{
+				ofDrawBitmapString(track.flag, drawSpace.x + 10, drawSpace.y + 30);
+			}
 		}
 		
 		//draw border
 		ofNoFill();
 		ofSetColor(redColor);
 		ofRect(drawSpace);
+		//draw label
+		if(track.type == "Colors"){
+			ofSetColor(track.color.getInverted());
+		}
+		else{
+			ofSetColor(255);
+		}
+		
+		if(font.isLoaded()){
+			font.drawString(track.name, drawSpace.x + 10, drawSpace.y + font.getLineHeight()+3);
+		}
+		else{
+			ofDrawBitmapString(track.name, drawSpace.x + 10, drawSpace.y + 15);
+		}
 		
 		trackIdx++;
 		ofPopStyle();
@@ -203,11 +225,23 @@ void ofxDuration::draw(float x, float y, float width, float height){
 }
 
 float ofxDuration::getValueForTrack(string trackName){
-	
+	if(tracks.find(trackName) != tracks.end()){
+		return tracks[trackName].value;
+	}
+	return false;
 }
 
 bool ofxDuration::getBoolForTrack(string trackName){
-	
+	if(tracks.find(trackName) != tracks.end()){
+		return tracks[trackName].on;
+	}
+	return false;
+}
+
+ofColor ofxDuration::getColorForTrack(string trackName){
+	if(tracks.find(trackName) != tracks.end()){
+		return tracks[trackName].color;
+	}
 }
 
 int ofxDuration::getNumTracks(){
@@ -219,5 +253,5 @@ vector<string>& ofxDuration::getTracks(){
 }
 
 void ofxDuration::setupFont(string fontPath, int fontSize){
-	
+	font.loadFont(fontPath, fontSize);
 }

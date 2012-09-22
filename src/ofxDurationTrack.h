@@ -6,6 +6,14 @@
 
 class ofxDurationTrack {
   public:
+	ofxDurationTrack(){
+		lastUpdatedTime = 0;
+		on = false;
+		value = 0;
+		range = ofRange(0,1.0);
+		color = ofColor(0,0,0);
+	}
+	
     string type;
     string name;
 	float lastUpdatedTime;

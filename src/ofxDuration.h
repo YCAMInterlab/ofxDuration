@@ -10,15 +10,18 @@ class ofxDuration : public ofxOscReceiver {
 	
 	ofxDuration();
 	void setup(int port);
-	//just debug
+	//Draws a column of tracks showing the name and some instananeous
+	//information about each one
 	void draw(float x, float y, float width, float height);
 
     float getValueForTrack(string trackName);
     bool getBoolForTrack(string trackName);
+	ofColor getColorForTrack(string trackName);
+	
     int getNumTracks();
-    
 	vector<string>& getTracks();
-		
+	
+	//register for trackUpdated events to respond only messages come in
 	ofxDurationEvents events;
 	
 	void setupFont(string fontPath, int fontSize);
