@@ -3,7 +3,7 @@
 #include "ofMain.h"
 #include "ofxDuration.h"
 
-#define PORT 12345
+
 class testApp : public ofBaseApp {
 	public:
 
@@ -24,4 +24,6 @@ class testApp : public ofBaseApp {
 	ofxDuration duration;
 
 	void trackUpdated(ofxDurationEventArgs& args);
+	string ip;
+	int port;
 };

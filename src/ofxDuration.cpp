@@ -7,8 +7,9 @@ ofxDuration::ofxDuration(){
 	blueColor = redColor.getInverted();	
 }
 
-void ofxDuration::setup(int port){
-	ofxOscReceiver::setup(port);
+void ofxDuration::setup(int _port){
+	ofxOscReceiver::setup(_port);
+	port = _port;
 	if(!isSetup){
 		ofAddListener(ofEvents().update, this, &ofxDuration::update);
 		isSetup = true;
@@ -20,7 +21,7 @@ void ofxDuration::update(ofEventArgs& args){
 		ofxOscMessage m;
 		getNextMessage(&m);
 		
-//		cout << "got message " << m.getAddress() << endl;
+		cout << "got message " << m.getAddress() << endl;
 		//duration will send an info package whenever play begins
 		//we use this to set up all the track info
 		if(m.getAddress() == "/duration/info"){
@@ -58,7 +59,7 @@ void ofxDuration::parseInfoMessage(const ofxOscMessage& m){
 				   m.getArgType(i+3) == OFXOSC_TYPE_FLOAT)
 				{
 					t.range = ofRange(m.getArgAsFloat(i+2), m.getArgAsFloat(i+3));
-					ofLogVerbose("ofxDuration::parseInfoMessage") << " track range is " << t.range << endl;
+					ofLogVerbose("ofxDuration::parseInfoMessage") << " track range is " << t.range;
 
 					i+=2;
 				}
@@ -144,7 +145,9 @@ void ofxDuration::parseTrackMessage(const ofxOscMessage& m){
 
 //just for debug purposes
 void ofxDuration::draw(float x, float y, float width, float height){
-
+	if(!isSetup){
+		return;
+	}
 
 	ofPushStyle();
 	ofEnableAlphaBlending();
@@ -152,11 +155,9 @@ void ofxDuration::draw(float x, float y, float width, float height){
     map<string, ofxDurationTrack>::iterator trackit;
 	int numTracks = tracks.size();
 	float heightPerTrack = height / numTracks;
-	int trackIdx = 0;
-	for(trackit = tracks.begin(); trackit != tracks.end(); trackit++){
+	for (int trackIdx = 0; trackIdx < trackNames.size(); trackIdx++) {
 		ofPushStyle();
-		
-		ofxDurationTrack& track = trackit->second;
+		ofxDurationTrack& track = tracks[trackNames[trackIdx]];
 		ofRectangle drawSpace(x, y+(heightPerTrack*trackIdx), width, heightPerTrack);
 		//fade out indicator over 2 seconds
 		float fadeValue = ofMap(track.lastUpdatedTime, ofGetElapsedTimef(), ofGetElapsedTimef()-2, 150, 0, true);
@@ -216,9 +217,16 @@ void ofxDuration::draw(float x, float y, float width, float height){
 		else{
 			ofDrawBitmapString(track.name, drawSpace.x + 10, drawSpace.y + 15);
 		}
-		
-		trackIdx++;
+	
 		ofPopStyle();
+	}
+	
+	ofSetColor(255);
+	if(font.isLoaded()){
+		font.drawString("listening on port " + ofToString(port), x + 10, y+height-5);
+	}
+	else{
+		ofDrawBitmapString("listening on port " + ofToString(port), x + 10, y+height-5);
 	}
 	
 	ofPopStyle();
@@ -228,6 +236,7 @@ float ofxDuration::getValueForTrack(string trackName){
 	if(tracks.find(trackName) != tracks.end()){
 		return tracks[trackName].value;
 	}
+	ofLogWarning("ofxDuration::getValueForTrack") << "Couldn't find track named " + trackName;	
 	return false;
 }
 
@@ -235,6 +244,7 @@ bool ofxDuration::getBoolForTrack(string trackName){
 	if(tracks.find(trackName) != tracks.end()){
 		return tracks[trackName].on;
 	}
+	ofLogWarning("ofxDuration::getBoolForTrack") << "Couldn't find track named " + trackName;
 	return false;
 }
 
@@ -242,10 +252,20 @@ ofColor ofxDuration::getColorForTrack(string trackName){
 	if(tracks.find(trackName) != tracks.end()){
 		return tracks[trackName].color;
 	}
+	ofLogWarning("ofxDuration::getColorForTrack") << "Couldn't find track named " + trackName;
+	return ofColor(0,0,0);
 }
 
 int ofxDuration::getNumTracks(){
 	return trackNames.size();
+}
+
+ofxDurationTrack ofxDuration::getTrack(string trackName){
+	if(tracks.find(trackName) != tracks.end()){
+		return tracks[trackName];
+	}
+	ofLogWarning("ofxDuration::getTrack") << "Couldn't find track named " + trackName;	
+	return ofxDurationTrack();
 }
 
 vector<string>& ofxDuration::getTracks(){

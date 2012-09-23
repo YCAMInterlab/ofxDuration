@@ -1,5 +1,11 @@
 #include "testApp.h"
 
+bool isNumber(const string& s){
+	std::string::const_iterator it = s.begin();
+    while (it != s.end() && (std::isdigit(*it))) ++it;
+	return !s.empty() && it == s.end();
+}
+
 //--------------------------------------------------------------
 void testApp::setup(){
 	ofSetFrameRate(60);
@@ -8,27 +14,46 @@ void testApp::setup(){
 	
 	ofSetLogLevel(OF_LOG_VERBOSE);
 	
+	//SimpleReceiverPort.txt should just have the port number
+	ofBuffer settings = ofBufferFromFile("SimpleReceiverPort.txt");
+	string portString = settings.getText();
+	if(isNumber(portString)){
+		port = ofToInt(portString);
+	}
+	else {
+		port = 12345;
+		ofSystemAlertDialog("SimpleReceiverPort.txt in data/ needs to contain a valid listening port number. Defaulting to 12345");
+	}
+	
+	duration.setup(port);
 	//ofxDuration is an OSC receiver, with special functions to listen for Duration specific messages
-	duration.setup(PORT);
 	//optionally set up a font for debugging
 	duration.setupFont("GUI/NewMedia Fett.ttf", 12);
-	
 	ofAddListener(duration.events.trackUpdated, this, &testApp::trackUpdated);
+
 }
 
 //--------------------------------------------------------------
 void testApp::update(){
 	
+	//the ofxDuration receiver is automatically updated.
+	//You can iterate through the tracks every frame like this:
+	vector<string>& allTracks = duration.getTracks();
+	for(int i = 0; i < allTracks.size(); i++){
+		ofxDurationTrack track = duration.getTrack(allTracks[i]);
+		//do something with the track!
+	}
 }
 
 //--------------------------------------------------------------
+//Or wait to receive messages, sent only when the track changed
 void testApp::trackUpdated(ofxDurationEventArgs& args){
 	ofLogVerbose("Duration Event") << "track type " << args.track->type << " updated with name " << args.track->name << " and value " << args.track->value << endl;
 }
 
 //--------------------------------------------------------------
 void testApp::draw(){
-	duration.draw(0,0, 200, ofGetHeight());
+	duration.draw(0,0, ofGetWidth(), ofGetHeight());
 }
 
 //--------------------------------------------------------------

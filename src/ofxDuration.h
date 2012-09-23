@@ -20,13 +20,17 @@ class ofxDuration : public ofxOscReceiver {
 	
     int getNumTracks();
 	vector<string>& getTracks();
+	//if you pass in a name for a track name we dont' have you'll get an unitialized track
+	ofxDurationTrack getTrack(string trackname);
 	
 	//register for trackUpdated events to respond only messages come in
 	ofxDurationEvents events;
 	
 	void setupFont(string fontPath, int fontSize);
 	
+	
   protected:
+	int port; //cached for drawing
 	bool isSetup;
     ofTrueTypeFont font;
     void update(ofEventArgs& args);
