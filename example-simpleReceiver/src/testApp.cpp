@@ -1,8 +1,9 @@
 #include "testApp.h"
-
+#include <locale>
 bool isNumber(const string& s){
+	locale loc;
 	std::string::const_iterator it = s.begin();
-    while (it != s.end() && (std::isdigit(*it))) ++it;
+    while (it != s.end() && (std::isdigit(*it, loc))) ++it;
 	return !s.empty() && it == s.end();
 }
 

@@ -1,6 +1,7 @@
 
 #include "ofxDuration.h"
 
+
 ofxDuration::ofxDuration(){
 	isSetup = false;
 	redColor = ofColor(250, 200, 80);
