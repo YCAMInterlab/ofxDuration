@@ -1,3 +1,34 @@
+/**
+ * ofxDuration
+ * openFrameworks addon for interacting with the Duration timeline
+ *
+ * Copyright (c) 2011-2012 James George
+ * Development Supported by YCAM InterLab http://interlab.ycam.jp/en/
+ * http://jamesgeorge.org + http://flightphase.com
+ * http://github.com/obviousjim + http://github.com/flightphase
+ *
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use,
+ * copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following
+ * conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
+ *
+ */
 
 #include "ofxDuration.h"
 
@@ -22,7 +53,6 @@ void ofxDuration::update(ofEventArgs& args){
 		ofxOscMessage m;
 		getNextMessage(&m);
 		
-		cout << "got message " << m.getAddress() << endl;
 		//duration will send an info package whenever play begins
 		//we use this to set up all the track info
 		if(m.getAddress() == "/duration/info"){
@@ -88,7 +118,7 @@ void ofxDuration::parseTrackMessage(const ofxOscMessage& m){
 			if(track.type == "Bangs"){
 				updated = true;
 			}
-			else if(track.type == "Curves"){
+			else if(track.type == "Curves" || track.type == "LFO"){
 				if(m.getNumArgs() == 1 && m.getArgType(0) == OFXOSC_TYPE_FLOAT){
 					track.value = m.getArgAsFloat(0);
 					updated = true;
@@ -130,6 +160,16 @@ void ofxDuration::parseTrackMessage(const ofxOscMessage& m){
 					ofLogError("ofxDuration::parseTrackMessage") << "Incorrect arguments sent to Flags track " << track.name;
 				}
 			}
+			else if(track.type == "Audio"){
+				track.fft.clear();
+				for(int i = 0; i < m.getNumArgs(); i++){
+					if(m.getArgType(i) == OFXOSC_TYPE_FLOAT){
+						float fftdata = m.getArgAsFloat(i);
+						track.fft.push_back(m.getArgAsFloat(i));
+						track.maxBinReceived = MAX(fftdata, track.maxBinReceived);
+					}
+				}
+			}
 			
 			if(updated){
 				track.lastUpdatedTime = ofGetElapsedTimef();
@@ -168,7 +208,7 @@ void ofxDuration::draw(float x, float y, float width, float height){
 			ofSetColor(blueColor, fadeValue);
 			ofRect(drawSpace);
 		}
-		else if(track.type == "Curves"){
+		else if(track.type == "Curves" || track.type == "LFO"){
 			ofSetColor(redColor);
 			float height = ofMap(track.value, track.range.min, track.range.max, drawSpace.getMaxY(), drawSpace.getMinY());
 			ofLine(drawSpace.getMinX(), height,
@@ -199,6 +239,18 @@ void ofxDuration::draw(float x, float y, float width, float height){
 				ofDrawBitmapString(track.flag, drawSpace.x + 10, drawSpace.y + 30);
 			}
 		}
+		else if(track.type == "Audio"){
+			float binWidth = drawSpace.width / track.fft.size();
+			ofFill();
+			for(int i = 0; i < track.fft.size(); i++){
+				float height = drawSpace.height * track.fft[i]/track.maxBinReceived;
+				float y = drawSpace.y + drawSpace.height - height;
+				ofSetColor(blueColor, 120);
+				ofRect(i*binWidth, y, binWidth, height);
+				ofSetColor(redColor);
+				ofLine(i*binWidth,y,i*binWidth+binWidth,y);
+			}
+		}
 		
 		//draw border
 		ofNoFill();
@@ -219,7 +271,6 @@ void ofxDuration::draw(float x, float y, float width, float height){
 			ofDrawBitmapString(track.name, drawSpace.x + 10, drawSpace.y + 15);
 		}
 	
-		ofPopStyle();
 	}
 	
 	ofSetColor(255);
