@@ -32,7 +32,7 @@
 
 #include "ofxDuration.h"
 
-
+vector<float> blankfft;
 ofxDuration::ofxDuration(){
 	isSetup = false;
 	redColor = ofColor(250, 200, 80);
@@ -83,7 +83,7 @@ void ofxDuration::parseInfoMessage(const ofxOscMessage& m){
 			t.lastUpdatedTime = ofGetElapsedTimef();
 			ofLogVerbose("ofxDuration::parseInfoMessage") << "Adding track " << t.type << " : " << t.name;
 
-			if(trackType == "Curves"){
+			if(trackType == "Curves" || trackType == "LFO"){
 				//consume two more args for min and max
 				if(i+3 < m.getNumArgs() &&
 				   m.getArgType(i+2) == OFXOSC_TYPE_FLOAT &&
@@ -192,7 +192,8 @@ void ofxDuration::draw(float x, float y, float width, float height){
 
 	ofPushStyle();
 	ofEnableAlphaBlending();
-	
+	ofSetLineWidth(1);
+    
     map<string, ofxDurationTrack>::iterator trackit;
 	int numTracks = tracks.size();
 	float heightPerTrack = height / numTracks;
@@ -284,28 +285,45 @@ void ofxDuration::draw(float x, float y, float width, float height){
 	ofPopStyle();
 }
 
-float ofxDuration::getValueForTrack(string trackName){
+
+ofTrueTypeFont& ofxDuration::getFont(){
+	return font;
+}
+
+bool ofxDuration::hasTrack(string trackName){
+	return tracks.find(trackName) != tracks.end();
+}
+
+float ofxDuration::getValueForTrack(string trackName, float defaultValue){
 	if(tracks.find(trackName) != tracks.end()){
 		return tracks[trackName].value;
 	}
-	ofLogWarning("ofxDuration::getValueForTrack") << "Couldn't find track named " + trackName;	
-	return false;
+	ofLogVerbose("ofxDuration::getValueForTrack") << "Couldn't find track named " + trackName;	
+	return defaultValue;
 }
 
-bool ofxDuration::getBoolForTrack(string trackName){
+bool ofxDuration::getBoolForTrack(string trackName, bool defaultValue){
 	if(tracks.find(trackName) != tracks.end()){
 		return tracks[trackName].on;
 	}
-	ofLogWarning("ofxDuration::getBoolForTrack") << "Couldn't find track named " + trackName;
-	return false;
+	ofLogVerbose("ofxDuration::getBoolForTrack") << "Couldn't find track named " + trackName;
+	return defaultValue;
 }
 
-ofColor ofxDuration::getColorForTrack(string trackName){
+ofColor ofxDuration::getColorForTrack(string trackName, ofColor defaultColor){
 	if(tracks.find(trackName) != tracks.end()){
 		return tracks[trackName].color;
 	}
-	ofLogWarning("ofxDuration::getColorForTrack") << "Couldn't find track named " + trackName;
-	return ofColor(0,0,0);
+	ofLogVerbose("ofxDuration::getColorForTrack") << "Couldn't find track named " + trackName;
+	return defaultColor;
+}
+
+vector<float>& ofxDuration::getFFTForTrack(string trackName){
+    if(tracks.find(trackName) != tracks.end()){
+        return tracks[trackName].fft;
+    }
+    ofLogVerbose("ofxDuration::getFFTForTrack") << "Couldn't find track named " + trackName;
+    return blankfft;
 }
 
 int ofxDuration::getNumTracks(){
@@ -316,7 +334,7 @@ ofxDurationTrack ofxDuration::getTrack(string trackName){
 	if(tracks.find(trackName) != tracks.end()){
 		return tracks[trackName];
 	}
-	ofLogWarning("ofxDuration::getTrack") << "Couldn't find track named " + trackName;	
+	ofLogVerbose("ofxDuration::getTrack") << "Couldn't find track named " + trackName;	
 	return ofxDurationTrack();
 }
 

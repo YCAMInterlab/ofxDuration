@@ -2,10 +2,9 @@
  * ofxDuration
  * openFrameworks addon for interacting with the Duration timeline
  *
- * Copyright (c) 2012 James George
- * Development Supported by YCAM InterLab http://interlab.ycam.jp/en/
- * http://jamesgeorge.org + http://flightphase.com
- * http://github.com/obviousjim + http://github.com/flightphase
+ * Copyright (c) 2012-2013 James George
+ * Co-developed by YCAM InterLab http://interlab.ycam.jp/en/
+ * http://jamesgeorge.org + http://github.com/obviousjim
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -46,10 +45,15 @@ class ofxDuration : public ofxOscReceiver {
 	//information about each one
 	void draw(float x, float y, float width, float height);
 
-    float getValueForTrack(string trackName);
-    bool getBoolForTrack(string trackName);
-	ofColor getColorForTrack(string trackName);
-	
+    //gets values from tracks
+    float getValueForTrack(string trackName, float defaultValue = 0);
+    bool getBoolForTrack(string trackName, bool defaultValue = false);
+	ofColor getColorForTrack(string trackName, ofColor defaultValue = ofColor::black);
+    vector<float>& getFFTForTrack(string trackName);
+    
+	bool hasTrack(string trackName);
+
+    
     int getNumTracks();
 	vector<string>& getTracks();
 	//if you pass in a name for a track name we dont' have you'll get an unitialized track
@@ -59,6 +63,7 @@ class ofxDuration : public ofxOscReceiver {
 	ofxDurationEvents events;
 	
 	void setupFont(string fontPath, int fontSize);
+	ofTrueTypeFont& getFont();
 	
   protected:
 	int port; //cached for drawing
